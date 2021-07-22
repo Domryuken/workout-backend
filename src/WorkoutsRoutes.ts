@@ -13,9 +13,7 @@ const onGet = (req: Request, res: Response) => {
         (err, client) => {
             if (err) throw err
             if (!client) throw "No database...?"
-            const db = client.db("testdb");
-
-            db.collection('testCollection').findOne({}, 
+            client.db("testdb").collection('testCollection').findOne({}, 
                 (err, result) => {
                     if (err) throw err
                     if (!result) throw "No result...?"
@@ -33,12 +31,10 @@ const onPut = (req: Request, res: Response) => {
         (err, client) => {
             if (err) throw err;
             if (!client) throw "No database...?"
-            const db = client.db("testdb");
             
             const filter = { username: req.body.username };
             const update = { $push: { workouts: req.body.workout }};
-        
-            db.collection("testCollection").updateOne(
+            client.db("testdb").collection("testCollection").updateOne(
                 filter,
                 update,
                 (err, res) => {
@@ -52,7 +48,23 @@ const onPut = (req: Request, res: Response) => {
 }
 
 const onDelete = (req: Request, res: Response) => {
-    res.status(200).send(`DELETE requested for id ${req.params.userId}`);
+    MongoClient.connect(
+        url,
+        (err, client) => {
+            if (err) throw err;
+            if (!client) throw "No database...?"
+            
+            const filter = { workout: req.body.workout}; //fix this
+            client.db("testdb").collection("testCollection").deleteOne(
+                filter,
+                (err, res) => {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    client.close();
+                }
+            );
+        }
+    );
 }
 
 export const workoutRoutes = (app: Application) => {
