@@ -1,5 +1,5 @@
 import { NextFunction, Application, Response, Request } from 'express';
-import { MongoClient, MongoError } from 'mongodb'
+import { ObjectId, MongoClient, MongoError } from 'mongodb'
 import { url } from './ConfigStuff'
 
 export const onGet = (req: Request, res: Response) => {
@@ -10,7 +10,7 @@ export const onGet = (req: Request, res: Response) => {
             if (err) throw err
             if (!client) throw "No database...?"
 
-            const filter = { username: req.params.username}
+            const filter = { username: req.params.arg}
             console.log(filter)
             
             client.db("testdb").collection('testCollection').find(filter).toArray( 
@@ -32,8 +32,9 @@ export const onPut = (req: Request, res: Response) => {
             if (err) throw err;
             if (!client) throw "No database...?"
             
-            const filter = { username: req.params.username, startTime: req.body.workout.startTime }
-            const update = { $set: { ...req.body.workout }}
+            const {_id, ...workout} = req.body.workout
+            const filter = { username: req.params.arg, _id: new ObjectId(_id)}
+            const update = { $set: { username: req.params.arg, ...workout }}
             const options = { upsert: true }
 
             client.db("testdb").collection("testCollection").updateOne(
@@ -58,7 +59,8 @@ export const onDelete = (req: Request, res: Response) => {
             if (err) throw err;
             if (!client) throw "No database...?"
  
-            const filter = { username: req.params.username, startTime: req.body.workout.startTime }
+            const filter = { _id: new ObjectId(req.params.arg)}
+            console.log(filter)
 
             client.db("testdb").collection("testCollection").deleteOne(
                 filter,

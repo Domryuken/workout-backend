@@ -10,10 +10,10 @@ const port = 5000;
 app.use(json());
 app.use(cors());
 
-app.route(`/workouts/:username`)
+app.route(`/workouts/:arg`)
     .get(workoutRoutes.onGet)
     .put(workoutRoutes.onPut)
-    .delete(workoutRoutes.onDelete);   
+    .delete(workoutRoutes.onDelete);
 
 server.listen(port, () => {
     console.log("Running");
