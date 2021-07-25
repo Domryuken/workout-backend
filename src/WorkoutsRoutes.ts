@@ -2,29 +2,29 @@ import { NextFunction, Application, Response, Request } from 'express';
 import { MongoClient, MongoError } from 'mongodb'
 import { url } from './ConfigStuff'
 
-const onAll = (req: Request, res: Response, next: NextFunction) => {
-    next();
-}
-
-const onGet = (req: Request, res: Response) => {
+export const onGet = (req: Request, res: Response) => {
 
     MongoClient.connect(
         url,
         (err, client) => {
             if (err) throw err
             if (!client) throw "No database...?"
-            client.db("testdb").collection('testCollection').findOne({}, 
+
+            const filter = { username: req.params.username}
+            console.log(filter)
+            
+            client.db("testdb").collection('testCollection').find(filter).toArray( 
                 (err, result) => {
                     if (err) throw err
                     if (!result) throw "No result...?"
-                    res.send(result.workouts);
+                    res.send(result);
                 }
             );
         }
     );
 }
 
-const onPut = (req: Request, res: Response) => {
+export const onPut = (req: Request, res: Response) => {
 
     MongoClient.connect(
         url,
@@ -32,45 +32,43 @@ const onPut = (req: Request, res: Response) => {
             if (err) throw err;
             if (!client) throw "No database...?"
             
-            const filter = { username: req.body.username };
-            const update = { $push: { workouts: req.body.workout }};
+            const filter = { username: req.params.username, startTime: req.body.workout.startTime }
+            const update = { $set: { ...req.body.workout }}
+            const options = { upsert: true }
+
             client.db("testdb").collection("testCollection").updateOne(
                 filter,
                 update,
-                (err, res) => {
+                options,
+                (err, result) => {
                     if (err) throw err;
-                    console.log("1 document updated");
                     client.close();
+                    res.send(result?.acknowledged)
                 }
             );
         }
     );
 }
 
-const onDelete = (req: Request, res: Response) => {
+export const onDelete = (req: Request, res: Response) => {
+
     MongoClient.connect(
         url,
         (err, client) => {
             if (err) throw err;
             if (!client) throw "No database...?"
-            
-            const filter = { workout: req.body.workout}; //fix this
+ 
+            const filter = { username: req.params.username, startTime: req.body.workout.startTime }
+
             client.db("testdb").collection("testCollection").deleteOne(
                 filter,
-                (err, res) => {
+                (err, result) => {
                     if (err) throw err;
-                    console.log("1 document updated");
                     client.close();
+                    res.send(result?.acknowledged)
                 }
             );
         }
     );
 }
 
-export const workoutRoutes = (app: Application) => {
-    app.route(`/workouts`)
-        .all(onAll)
-        .get(onGet)
-        .put(onPut)
-        .delete(onDelete);   
-}
