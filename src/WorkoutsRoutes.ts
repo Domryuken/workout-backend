@@ -10,7 +10,7 @@ export const onGet = (req: Request, res: Response) => {
             if (err) throw err
             if (!client) throw "No database...?"
 
-            const filter = { username: req.params.arg}
+            const filter = { username: req.params.username}
             console.log(filter)
             
             client.db("testdb").collection('testCollection').find(filter).toArray( 
@@ -33,8 +33,8 @@ export const onPut = (req: Request, res: Response) => {
             if (!client) throw "No database...?"
             
             const {_id, ...workout} = req.body.workout
-            const filter = { username: req.params.arg, _id: new ObjectId(_id)}
-            const update = { $set: { username: req.params.arg, ...workout }}
+            const filter = { _id: new ObjectId(_id)}
+            const update = { $set: workout }
             const options = { upsert: true }
 
             client.db("testdb").collection("testCollection").updateOne(
@@ -59,7 +59,7 @@ export const onDelete = (req: Request, res: Response) => {
             if (err) throw err;
             if (!client) throw "No database...?"
  
-            const filter = { _id: new ObjectId(req.params.arg)}
+            const filter = { _id: new ObjectId(req.params.id)}
             console.log(filter)
 
             client.db("testdb").collection("testCollection").deleteOne(
