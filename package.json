@@ -16,6 +16,7 @@
     "express": "^4.17.1",
     "express-winston": "^4.1.0",
     "mongodb": "^4.0.1",
+    "typescript-language-server": "^0.5.4",
     "winston": "^3.3.3"
   },
   "devDependencies": {

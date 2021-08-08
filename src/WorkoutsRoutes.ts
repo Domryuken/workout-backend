@@ -1,78 +1,37 @@
-import { NextFunction, Application, Response, Request } from 'express';
+import { Response, Request } from 'express';
 import { ObjectId, MongoClient, MongoError, Collection } from 'mongodb'
 import { url } from './ConfigStuff'
 
-// test thing
-const connect: (operation: (collection: Collection<Document>) => any) => void = (operation) => {
+const getCollection = (client: MongoClient) => client.db("testdb").collection('testCollection')
+ 
+export async function onGet(req: Request, res: Response) {
 
-    MongoClient.connect(
-        url,
-        (err, client) => {
-            if (err) throw err
-            if (!client) throw "No database...?"
-            const collection: Collection<Document> = client.db("testdb").collection('testCollection')
-            operation(collection)
-       }
-    );
+	const collection = await MongoClient.connect(url).then(client => getCollection(client))
+	const filter = {username: req.params.username}
+	const documents = await collection.find(filter).toArray()
+	res.send(documents)
 }
 
-const findAll: (req: Request, res: Response, collection: Collection<Document>) => void =
-    (req, res, collection) => {
-        const filter = { username: req.params.username}
-        console.log(filter)
-        collection.find(filter).toArray().then(
-            (documents) => res.send(documents)
-        );
-    }
+export async function onPut(req: Request, res: Response) {
 
-const upsertOne: (req: Request, res: Response, collection: Collection<Document>) => void =
-    (req, res, collection) => {
-    
-        const {_id, ...workout} = req.body.workout
-        const filter = { _id: new ObjectId(_id)}
-        const update = { $set: workout }
-        const options = { upsert: true }
+	const collection = await MongoClient.connect(url).then((client) => getCollection(client))
+	const {_id, ...workout} = req.body.workout
 
-        collection.updateOne(
-            filter,
-            update,
-            options,
-        ).then(() => findAll(req, res, collection));
+	await collection.updateOne(
+		{ _id: new ObjectId(_id)},	
+		{ $set: workout },
+		{ upsert: true }
+	)
 
-    } 
-
-const deleteOne: (req: Request, res: Response, collection: Collection<Document>) => void =
-    (req, res, collection) => {
-
-        const filter = { _id: new ObjectId(req.params.id)}
-        console.log(filter)
-
-        collection.deleteOne(
-            filter,
-            (err, result) => {
-                if (err) throw err;
-                res.send(result?.acknowledged)
-            }
-        );
-    } 
-
-
-
-export const onGet = (req: Request, res: Response) => {
-    connect( (collection: Collection<Document>) => {
-        findAll(req, res, collection)
-    });
+	const documents = await collection.find({username: req.params.username}).toArray()
+	res.send(documents)
 }
 
-export const onPut = (req: Request, res: Response) => {
-    connect( (collection: Collection<Document>) => {
-        upsertOne(req, res, collection)           
-    });
-}
+export async function onDelete(req: Request, res: Response) {
 
-export const onDelete = (req: Request, res: Response) => {
-    connect( (collection: Collection<Document>) => {
-        deleteOne(req, res, collection)
-    });
+	const collection = await MongoClient.connect(url).then((client) => getCollection(client))
+	await collection.deleteOne({ _id: new ObjectId(req.params.id)})
+	const documents = await collection.find({username: req.params.username}).toArray()
+	res.send(documents)
 }
 
