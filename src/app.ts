@@ -13,10 +13,10 @@ app.use(cors());
 app.route(`/workouts/:username/`)
     .get(workoutRoutes.onGet)
     
-app.route(`/workouts/update/`)
+app.route(`/workouts/`)
     .put(workoutRoutes.onPut)
 
-app.route(`/workouts/delete/:id/`)
+app.route(`/workouts/:username/:id/`)
     .delete(workoutRoutes.onDelete);
 
 server.listen(port, () => {
